@@ -7,20 +7,9 @@
 // @include      https://w3-connections.ibm.com/blogs/Socializer/*
 // @grant        none
 // @require      http://code.jquery.com/jquery-latest.js
+// @require      https://github.com/FTavukcu/Socializer/raw/master/xml2json.js
+// @downloadURL  https://github.com/FTavukcu/Socializer/raw/master/Socializer.user.js
 // ==/UserScript==
-
-/* xml2json jquery extension by Fatih Tavukcu
-* Version 0.1 - 2014-06-05
-*/
-(function($){$.xml2json={nodeType:{1:'ELEMENT',2:'ATTRIBUTE',3:'TEXT',4:'CDATA_SECTION',5:'ENTITY_REFERENCE',6:'ENTITY',7:'PROCESSING_INSTRUCTION',8:'COMMENT',9:'DOCUMENT',10:'DOCUMENT_TYPE',11:'DOCUMENT_FRAGMENT',12:'NOTATION'},translate:function(source,benchmark){var xml=$.isXMLDoc(source)?source:$.parseXML(source);var start=Date.now();var result=$.extend({},$.xml2json.extend(xml));if(typeof benchmark!="undefined")
-if(benchmark)
-console.log("Time taken: "+(Date.now()-start)+" ms");return result;},extend:function(xml){switch($.xml2json.nodeType[xml.nodeType]){case'ELEMENT':var element={};element[xml.nodeName]={};$.each(xml.attributes,function(n,xmlAttribute){var attribute={};attribute["_"+xmlAttribute.name]=xmlAttribute.value;$.extend(element[xml.nodeName],attribute);});$.each(xml.childNodes,function(n,xmlChild){var child=$.xml2json.extend(xmlChild);if(child!=null){switch($.xml2json.nodeType[xmlChild.nodeType]){case"ELEMENT":if(typeof element[xml.nodeName][xmlChild.nodeName]=="undefined")
-element[xml.nodeName][xmlChild.nodeName]=[];element[xml.nodeName][xmlChild.nodeName].push(child[Object.keys(child)[0]]);break;case"TEXT":if(typeof element[xml.nodeName]["__text"]=="undefined")
-element[xml.nodeName]["__text"]="";element[xml.nodeName]["__text"]+=child[Object.keys(child)[0]];break;default:$.extend(element[xml.nodeName],child);break;}}});return element;break;case'ATTRIBUTE':var attribute={};attribute[xml.nodeName]=xml.nodeValue;return attribute;break;case'TEXT':var text=$.trim(xml.nodeValue);return text.length==0?null:{"__text":text};break;case'CDATA_SECTION':var cdata=$.trim(xml.nodeValue);return cdata.length==0?null:{"__cdata":cdata};break;case'PROCESSING_INSTRUCTION':return null;break;case'DOCUMENT':var document={}
-$.each(xml.childNodes,function(n,xmlchild){var child=$.xml2json.extend(xmlchild);if(child!=null)
-$.extend(document,child);});return document;break;}}}})(jQuery);
-
-
 
 console.log("Socializer 0.2 by Fatih Tavukcu");
 
@@ -138,4 +127,4 @@ var Socializer = {														// Don't touch anything before this point
     }
 }
 
-//Socializer.start();
+Socializer.start();
