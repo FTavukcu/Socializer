@@ -1,17 +1,46 @@
 // ==UserScript==
 // @name         Socializer
 // @namespace    https://github.com/FTavukcu/Socializer
-// @version      0.2.1
+// @version      0.2.2
 // @description  Be more social - fully automated
 // @author       Fatih Tavukcu
 // @include      https://w3-connections.ibm.com/blogs/Socializer/*
 // @grant        none
 // @require      http://code.jquery.com/jquery-latest.js
 // @require      https://github.com/FTavukcu/Socializer/raw/master/xml2json.js
+// @require      https://github.com/FTavukcu/Socializer/raw/master/log.js
 // @downloadURL  https://github.com/FTavukcu/Socializer/raw/master/Socializer.user.js
 // ==/UserScript==
 
-console.log("Socializer 0.2.1 by Fatih Tavukcu");
+log.info("Socializer 0.2.2 by Fatih Tavukcu - Local");
+
+var $dashboard = $("<div data-ft-app='Socializer'><input type='checkbox' data-ft-data='config'></div>");
+$('#entries').hide().after($dashboard);
+
+
+var FT = {
+    app: {},
+    initApp: function(appname, data){
+        log.debug('FT.Initializing "' + appname + '"');
+        FT.app[appname] = data;
+    },
+    compile: function(jqobj){
+        log.debug('FT.Compiling "' + jqobj + '"');
+        jqobj.find('[data-ft-app]').each(function(app){
+            console.log("App", app);
+        });
+    }
+};
+
+
+FT.initApp('Socializer', {
+    config: true
+});
+
+FT.compile($dashboard);
+
+
+
 
 var Socializer = {														// Don't touch anything before this point
     me: "fatih.tavukcu@de.ibm.com",  					// Replace with your email
@@ -127,4 +156,4 @@ var Socializer = {														// Don't touch anything before this point
     }
 }
 
-Socializer.start();
+//Socializer.start();
