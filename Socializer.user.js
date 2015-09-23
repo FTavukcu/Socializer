@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Socializer
 // @namespace    https://github.com/FTavukcu/Socializer
-// @version      0.2
+// @version      0.2.1
 // @description  Be more social - fully automated
 // @author       Fatih Tavukcu
 // @include      https://w3-connections.ibm.com/blogs/Socializer/*
@@ -11,7 +11,7 @@
 // @downloadURL  https://github.com/FTavukcu/Socializer/raw/master/Socializer.user.js
 // ==/UserScript==
 
-console.log("Socializer 0.2 by Fatih Tavukcu");
+console.log("Socializer 0.2.1 by Fatih Tavukcu");
 
 var Socializer = {														// Don't touch anything before this point
     me: "fatih.tavukcu@de.ibm.com",  					// Replace with your email
