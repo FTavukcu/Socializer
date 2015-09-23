@@ -25,7 +25,7 @@ var FT = {
         FT.app[appname] = data;
     },
     compile: function(jqobj){
-        log.debug('FT.Compiling "' + jqobj + '"');
+        log.debug('FT.Compiling "' + jqobj.selector + '"');
         jqobj.find('[data-ft-app]').each(function(app){
             console.log("App", app);
         });
