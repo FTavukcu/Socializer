@@ -9,13 +9,13 @@ var log = {
             style: "color: #08f"
         }, {
             description: "warn",
-            style: ""
+            style: "color: #f80"
         }, {
             description: "error",
-            style: ""
+            style: "color: #f00"
         }, {
             description: "fatal",
-            style: ""
+            style: "color: #fff; background-color: #f00"
         }
     ],
     history: [],
