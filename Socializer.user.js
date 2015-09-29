@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Socializer
 // @namespace    https://github.com/FTavukcu/Socializer
-// @version      0.2.2
+// @version      0.2.3
 // @description  Be more social - fully automated
 // @author       Fatih Tavukcu
 // @include      https://w3-connections.ibm.com/blogs/Socializer/*
@@ -12,30 +12,85 @@
 // @downloadURL  https://github.com/FTavukcu/Socializer/raw/master/Socializer.user.js
 // ==/UserScript==
 
-log.info("Socializer 0.2.2 by Fatih Tavukcu - Local");
-
-var $dashboard = $("<div data-ft-app='Socializer'><input type='checkbox' data-ft-data='config'></div>");
-$('#entries').hide().after($dashboard);
-
-
+$.fn.findSelf = function(selector) {var result = this.find(selector);return (this.is(selector)) ? result.add(this) : result;};
 var FT = {
     app: {},
+    monitor: {},
     initApp: function(appname, data){
-        log.debug('FT.Initializing "' + appname + '"');
+        log.debug("FT.Initializing", appname);
         FT.app[appname] = data;
+        FT.monitor[appname] = [];
     },
-    compile: function(jqobj){
-        log.debug('FT.Compiling "' + jqobj.selector + '"');
-        jqobj.find('[data-ft-app]').each(function(app){
-            console.log("App", app);
+    compile: function($jqobj){
+        log.debug("FT.Compiling", $jqobj[0]);
+        $jqobj.find("[data-ft-each]").each(function(i, fteach){
+            
         });
+        $jqobj.find("[data-ft-data]").each(function(i, ftdata){
+            FT.compileOne(ftdata, "data");
+        });
+        window.FT = FT;
+    },
+    compileOne: function(cobj, ctype){
+        var $cobj = $(cobj);
+        switch(ctype){
+            case "data":
+                var app = $cobj.closest("[data-ft-app]").attr('data-ft-app');
+                var data = $cobj.attr('data-ft-data');
+                var target = FT.app[app][data];
+                switch(cobj.localName){
+                    case "input":
+                        switch(cobj.type){
+                            case "text":
+                                $cobj.val(target).on('change', function(){
+                                    target = $(this).val();
+                                });
+                                FT.monitor[app].push(cobj);
+                                $cobj.data('model',cobj);
+                                break;
+                            case "checkbox":
+                                $cobj.prop("checked", target).on('change', function(){
+                                    target = $(this).prop("checked");
+                                });                            
+                                break;
+                        };
+                        break;
+                };
+                break;
+        };
     }
 };
 
 
+log.level = 0;
+log.info("Socializer 0.2.3 by Fatih Tavukcu - Local");
+
 FT.initApp('Socializer', {
-    config: true
+    active: true,
+    timer: 60,
+    fisch: {
+        damn: "wat"
+    }
 });
+
+var $dashboard =
+$("\
+<h1>Socializer</h1>\
+<div data-ft-app='Socializer'>\
+    <input type='checkbox' data-ft-data='active'> Activate Socializer<br/>\
+    Check every <input data-ft-data='timer' size='2'> minutes for updates on the following blogs:\
+    <table>\
+        <tr data-ft-each='blog in blogs'>\
+            <td data-ft-data='blog.short'></td>\
+            <td data-ft-data='blog.start'></td>\
+            <td><a data-ft-href=''>Visit blog</a></td>\
+        </tr>\
+    </table>\
+</div>\
+");
+
+
+$('#entries').siblings().andSelf().hide().last().after($dashboard);
 
 FT.compile($dashboard);
 
@@ -154,6 +209,6 @@ var Socializer = {														// Don't touch anything before this point
            Socializer.checkBlogs(Socializer.monitoredBlogs);
        }, Socializer.checkEveryXMinutes * 1000 * 60);
     }
-}
+};
 
 //Socializer.start();
