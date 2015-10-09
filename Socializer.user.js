@@ -56,14 +56,14 @@ var $dashboard = $("\
       <tr><td></td><td><button data-ng-click='clearNot()'>Clear all notifications</button> | <button data-ng-click='publishAll()'>Publish all</button></td></tr>\
     </table>\
     <table>\
-      <tr data-ng-if='data.blogs.length > 0' style='font-weight: bold'><td></td><td>Blog</td><td>Check interval</td><td>Mode</td><td>Ignore posts before</td><td>Reply pool</td></tr>\
+      <tr data-ng-if='data.blogs.length > 0' style='font-weight: bold'><td></td><td>Blog name</td><td>Reply pool</td><td>Check interval</td><td>Ignore posts before</td><td>Mode</td></tr>\
       <tr data-ng-repeat='blog in data.blogs'>\
         <td><button data-ng-click='removeBlog($index)'><i class='material-icons red'>remove_circle_outline</i></button></td>\
         <td><input data-ng-model='blog.name' size='6' data-ng-change='disableBlog(blog)'><a data-ng-show='blog.name.length>0' data-ng-href='{{data.root}}/{{blog.name}}' target='_BLANK' title='Visit'><i class='material-icons'>launch</i></a></td>\
-        <td>Every <input data-ng-model='blog.timer' size='2' data-ng-change='disableBlog(blog)'> min.</td>\
-        <td><i class='material-icons'>{{getIcon(blog.mode)}}</i><select data-ng-model='blog.mode' data-ng-init='blog.mode = blog.mode || 0' data-ng-options='mode.value as mode.name for mode in validModes(blog)' data-ng-change='updateBlog(blog)'></select></td>\
-        <td><input type='date' data-ng-model='blog.ignorebefore' size='10' data-ng-change='disableBlog(blog)'></td>\
         <td><select data-ng-model='blog.pool' data-ng-init='blog.pool = blog.pool || 0' data-ng-options='$index as pool.title for pool in data.pools' data-ng-change='disableBlog(blog)'></select></td>\
+        <td>Every <input data-ng-model='blog.timer' size='2' data-ng-change='disableBlog(blog)'> min.</td>\
+        <td><input type='date' data-ng-model='blog.ignorebefore' size='10' data-ng-change='disableBlog(blog)'></td>\
+        <td><i class='material-icons'>{{getIcon(blog.mode)}}</i><select data-ng-model='blog.mode' data-ng-init='blog.mode = blog.mode || 0' data-ng-options='mode.value as mode.name for mode in validModes(blog)' data-ng-change='updateBlog(blog)'></select></td>\
       </tr>\
       <tr data-ng-if='data.blogs.length > 0'><td colspan='6'><hr/></td></tr>\
       <tr><td colspan='6'><button data-ng-click='addBlog();'><i class='material-icons blue'>add_circle_outline</i> Add Blog</button></td></tr>\
@@ -421,10 +421,11 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
         return $sce.trustAsHtml(val);
     };
 });
-;
 
 $('#lotusContent').html($dashboard);
 
 window.onbeforeunload = function() {
   return "Socializer will be shut down. Non-saved changes will be lost.";
 }
+
+document.title = 'Socializer Dashboard';
