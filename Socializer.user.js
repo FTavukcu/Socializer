@@ -5,7 +5,7 @@
 // @version      1.0.0
 // @description  Be more social - fully automated
 // @author       Fatih Tavukcu
-// @include      https://w3-connections.ibm.com/blogs/Socializer/*
+// @match        https://w3-connections.ibm.com/blogs/Socializer/*
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @require      http://code.jquery.com/jquery-latest.js
@@ -15,7 +15,8 @@
 // @downloadURL  https://github.com/FTavukcu/Socializer/raw/master/Socializer.user.js
 // ==/UserScript==
 
-log.info('Socializer 1.0.0');
+var version = '1.0.0';
+log.info('Socializer ' + version);
 
 GM_addStyle(GM_getResourceText ("materialicons"));
 
@@ -50,21 +51,24 @@ var $dashboard = $("\
 <div class='pool' data-ng-app='Socializer' data-ng-cloak>\
   <div data-ng-controller='MainCtrl'>\
     <table id='notifications' data-ng-show='notifications.length>0'>\
-      <tr data-ng-repeat='notification in notifications' class='notification'><td width='25%'>{{notification.date}}</td><td width='65%'><div ng-bind-html='notification.html | unsafe'></div></td><td width='10%'><button class='confirmer' data-ng-if='notification.confirm' data-ng-click='publishPostN(notification.confirm-1, $index)'>Yes</button></td></tr>\
+      <tr><td>Date</td><td>Notification</td><td>Confirm</td></tr>\
+      <tr data-ng-repeat='notification in notifications' class='notification'><td width='20%'>{{notification.date.toLocaleString()}}</td><td width='70%'><div ng-bind-html='notification.html | unsafe'></div></td><td width='10%'><button class='confirmer' data-ng-if='notification.confirm' data-ng-click='publishPostN(notification.confirm, $index)'>Yes</button></td></tr>\
+      <tr><td></td><td><button data-ng-click='clearNot()'>Clear all notifications</button> | <button data-ng-click='publishAll()'>Publish all</button></td></tr>\
     </table>\
     <table>\
-      <tr data-ng-if='data.blogs.length > 0' style='font-weight: bold'><td>Blog</td><td>Check interval</td><td>Mode</td><td>Ignore posts before</td><td>Reply pool</td></tr>\
+      <tr data-ng-if='data.blogs.length > 0' style='font-weight: bold'><td></td><td>Blog</td><td>Check interval</td><td>Mode</td><td>Ignore posts before</td><td>Reply pool</td></tr>\
       <tr data-ng-repeat='blog in data.blogs'>\
-        <td><button data-ng-click='removeBlog($index)'><i class='material-icons red'>remove_circle_outline</i></button><input data-ng-model='blog.name' size='6' data-ng-change='disableBlog(blog)'></td>\
+        <td><button data-ng-click='removeBlog($index)'><i class='material-icons red'>remove_circle_outline</i></button></td>\
+        <td><input data-ng-model='blog.name' size='6' data-ng-change='disableBlog(blog)'><a data-ng-show='blog.name.length>0' data-ng-href='{{data.root}}/{{blog.name}}' target='_BLANK' title='Visit'><i class='material-icons'>launch</i></a></td>\
         <td>Every <input data-ng-model='blog.timer' size='2' data-ng-change='disableBlog(blog)'> min.</td>\
         <td><i class='material-icons'>{{getIcon(blog.mode)}}</i><select data-ng-model='blog.mode' data-ng-init='blog.mode = blog.mode || 0' data-ng-options='mode.value as mode.name for mode in validModes(blog)' data-ng-change='updateBlog(blog)'></select></td>\
         <td><input type='date' data-ng-model='blog.ignorebefore' size='10' data-ng-change='disableBlog(blog)'></td>\
         <td><select data-ng-model='blog.pool' data-ng-init='blog.pool = blog.pool || 0' data-ng-options='$index as pool.title for pool in data.pools' data-ng-change='disableBlog(blog)'></select></td>\
       </tr>\
-      <tr data-ng-if='data.blogs.length > 0'><td colspan='5'><hr/></td></tr>\
-      <tr><td colspan='5'><button data-ng-click='addBlog();'><i class='material-icons blue'>add_circle_outline</i> Add Blog</button></td></tr>\
-      <tr><td colspan='5'><hr/></td></tr>\
-      <tr><td colspan='5'>Blogs will be monitored in the specified interval for new blog posts and will use answers from the selected reply pools. If no reply pools are available, make sure to create one right below.</td></tr>\
+      <tr data-ng-if='data.blogs.length > 0'><td colspan='6'><hr/></td></tr>\
+      <tr><td colspan='6'><button data-ng-click='addBlog();'><i class='material-icons blue'>add_circle_outline</i> Add Blog</button></td></tr>\
+      <tr><td colspan='6'><hr/></td></tr>\
+      <tr><td colspan='6'>Blogs will be monitored in the specified interval for new blog posts and will use answers from the selected reply pools. If no reply pools are available, make sure to create one right below.</td></tr>\
     </table>\
     <form><ul class='tabber'>\
       <li class='tab'><label class='btn' data-ng-click='addPool()'><i class='material-icons'>add_circle_outline</i> Add reply pool</label></li><li class='tab' data-ng-repeat='pool in data.pools'><label data-ng-class=\"$index==selectedPool?'checked':''\"><input name='selectedPool' data-ng-value='$index' type='radio' data-ng-model='$parent.selectedPool'><button data-ng-if='$index==selectedPool' data-ng-click='removeFrom(data.pools, $index)' title='Remove this reply pool'><i class='material-icons red'>remove_circle_outline</i></button> <span data-ng-if='$index!=selectedPool'>{{pool.title}}</span><input data-ng-if='$index==selectedPool' size='6' type='text' data-ng-model='pool.title'></label></li>\
@@ -82,12 +86,13 @@ var $dashboard = $("\
       <tr data-ng-repeat-end=''><td colspan='2'><hr/></td></tr>\
       <tr><td colspan='2'>Automated replies on blog posts will be randomly selected from these reply pools. The more matches a match has in a blog post, the more likely a response for that match will be chosen. Enter default as match for cases where no match is found. A list of usable variables<dl style='text-align: left;'>\
       <dt><b>Available variables in responses</b></dt>\
-        <dt>%NAME%</dt><dd>The name of the blog poster</dd>\
-        <dt>%SURNAME%</dt><dd>The surname of the blog poster</dd>\
+        <dt>%fullname%</dt><dd>The full name of the blog poster</dd>\
+        <dt>%name%</dt><dd>The name of the blog poster</dd>\
+        <dt>%surname%</dt><dd>The surname of the blog poster</dd>\
       </dl></td></tr>\
     </table>\
-    <table><tr><td><button class='reset settings' data-ng-click='reset()'>Reset settings</button></td><td><button class='save settings' data-ng-click='save()'>Save settings</button></td></tr></table>\
-    <table><tr><td>Socializer v1.0.0 - 2015 by <a href='mailto:fatih.tavukcu@de.ibm.com'>Fatih Tavukcu</a></td></tr></table>\
+    <table><tr><td><button class='reset settings' data-ng-click='reset()'>Reset settings</button></td><td><button class='save settings' data-ng-click='save()'>Save settings</button></td></tr>\
+    <tr><td colspan='2'>Make sure to bookmark this page with [CTRL]+D/&#8984;+D - If you close this dashboard, Socializer will stop checking for updates and posting comments. If you want to give some feedback, please head over to the <a href='https://w3-connections.ibm.com/blogs/Socializer-Discussion/'>Socializer Discussion blog</a> and leave a comment.</td></tr><tr><td colspan='2'>Socializer v" + version + " - 2015 by <a href='mailto:fatih.tavukcu@de.ibm.com'>Fatih Tavukcu</a></td></tr></table>\
   </div>\
 </div>\
 <div id='loader'>Socializer is initializing, please wait...</div>\
@@ -132,6 +137,22 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
             log.info("Saved all settings");
         }
     };
+    
+    $scope.publishAll = function(){
+        if (confirm('Publish all posts?')){
+            $scope.notifications.forEach(function(notification){
+                $scope.publishPostN(notification.confirm);
+            });
+            $('#notifications tr.notification button.confirmer').prop('disabled', true).text('Published');
+        }
+    };
+    
+    $scope.clearNot = function(){
+        if (confirm('Clear all notifications?')){
+            $scope.notifications=[];
+            $scope.posts={};
+        }
+    };
 
     $scope.reset = function(){
         if (confirm('This will reset your settings')){
@@ -156,7 +177,7 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
 		]
 	};
 	$scope.notifications = [];
-    $scope.posts = [];
+    $scope.posts = {};
  
     $scope.retrieve = function(str){
         var obj = JSON.parse(str);
@@ -270,8 +291,10 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
                             log.info("No comment by " + $scope.data.me + " found in " + entry["_xml:base"] );
                             if (blog.mode == 1)
                                 $scope.notifications.push({blog: blog, entry: entry, date: new Date(Date.now()), html:'Post "<a href="' + entry["_xml:base"] + '" target="_BLANK">' + entry.title[0].__text + '</a>" found with no comment.'});
-                            if (blog.mode > 1)
-                                $scope.comment(entry, blog);
+                            if (blog.mode > 1){
+                                if (!$scope.posts[entry["_xml:base"]]||blog.mode == 3)
+                                    $scope.comment(entry, blog);
+                            }
                         } else {
                             log.info(entry["_xml:base"] + " already contains a comment by " + $scope.data.me);
                         }
@@ -284,25 +307,41 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
 	};
 	
 	$scope.comment = function(entry, blog){
-        log.debug("Commenting on entry ...");
+        log.debug("Commenting on entry ...", entry);
 		var content = entry.content[0].__text;
 		var scores = [];
 		var pool = $scope.data.pools[blog.pool];
-        var score = 0;
+        log.debug('Selected pool for', blog, 'is', post);
 		pool.matches.forEach(function(matcher){
-            if (matcher.regex == 'default'){
+            log.debug('Matching', content, 'with', matcher.regex);
+            var score = 0;
+            if (matcher.regex != 'default'){
                 var matches = content.match(new RegExp(matcher.regex, (matcher.global?'g':'') + (matcher.caseinsensitive?'i':'')));
                 if (matches)
                     score += matches.length * 2;
             } else
                 score = 1;
+            log.debug('Score', score);
+            scores.push(score);
 		});
-        scores.push(score);
         var takeMessageFrom = scores.indexOf(Math.max.apply(window, scores));
 		
 		log.debug("Will pick from " + pool.matches[takeMessageFrom].regex);
 		var responses = pool.matches[takeMessageFrom].responses;
 		var response = responses[Math.floor(Math.random() * responses.length)];
+        
+        var author = entry.author[0].name[0].__text.split(' ');
+        var a_name = author.shift();
+        var a_surname = author.join(' ');
+        var rpl = {
+            "\%fullname\%": entry.author[0].name[0].__text,
+            "\%name\%": a_name,
+            "\%surname\%": a_surname
+        }
+        
+        $.each(rpl, function(regex, value) {
+            response = response.replace(new RegExp(regex,"gi"),value);
+        }); 
 		log.debug("Chosen response", '"' + response + '"');
 		
 		var strData = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -324,14 +363,14 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 log.error(jqXHR + " - " + textStatus + ' - ' + errorThrown);
-            }
+            },
         };
         
-        $scope.posts.push(post);
+        $scope.posts[entry["_xml:base"]] = post;
 
         if (blog.mode == 2){
             log.info("No auto commenting desired");
-            $scope.notifications.push({blog: blog, entry: entry, date: new Date(Date.now()), html:'Should "' + response + '" be published to <a href="' + entry["_xml:base"] + '" target="_BLANK">' + entry.title[0].__text + '</a>?', confirm:($scope.posts.length)});
+            $scope.notifications.push({blog: blog, entry: entry, date: new Date(Date.now()), html:'Should "' + response + '" be published to <a href="' + entry["_xml:base"] + '" target="_BLANK">' + entry.title[0].__text + '</a>?', confirm:entry["_xml:base"]});
         }
         
         if (blog.mode == 3){
@@ -343,8 +382,10 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
     };
     
     $scope.publishPostN = function(n, t){
-        $('.notification:eq('+t+') button.confirmer').prop('disabled', true).text('OK');
+        if (t)
+            $('.notification:eq('+t+') button.confirmer').prop('disabled', true).text('Published');
         $scope.publishPost($scope.posts[n]);
+        delete $scope.posts[n];
     };
     
     $scope.publishPost = function(post){
@@ -383,3 +424,7 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
 ;
 
 $('#lotusContent').html($dashboard);
+
+window.onbeforeunload = function() {
+  return "Socializer will be shut down. Non-saved changes will be lost.";
+}
