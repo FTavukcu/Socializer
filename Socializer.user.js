@@ -2,7 +2,7 @@
 // @name         Socializer
 // @namespace    https://github.com/FTavukcu/Socializer
 // @resource     materialicons https://fonts.googleapis.com/icon?family=Material+Icons
-// @version      1.0.0
+// @version      1.0.1
 // @description  Be more social - fully automated
 // @author       Fatih Tavukcu
 // @match        https://w3-connections.ibm.com/blogs/Socializer/*
@@ -16,7 +16,7 @@
 // @downloadURL  https://github.com/FTavukcu/Socializer/raw/master/Socializer.user.js
 // ==/UserScript==
 
-var version = '1.0.0';
+var version = '1.0.1';
 log.info('Socializer ' + version);
 
 GM_addStyle(GM_getResourceText("materialicons"));
@@ -45,17 +45,18 @@ GM_addStyle("\
 	div.pool table button.settings {padding: 10px 20px; color: #fff;border-radius: 2px;}\
 	div.pool table button.settings.save {background:#19f}\
 	div.pool table button.settings.reset {background:#f12}\
+    #notcont {max-height:400px; overflow: auto;}\
 	");
 
 var $dashboard = $("\
 		<h1>Socializer Dashboard</h1>\
 		<div class='pool' data-ng-app='Socializer' data-ng-cloak>\
 		  <div data-ng-controller='MainCtrl'>\
-		    <table id='notifications' data-ng-show='notifications.length>0'>\
+		    <div id='notcont'><table id='notifications' data-ng-show='notifications.length>0'>\
 		      <tr><td>Date</td><td>Notification</td><td>Confirm</td></tr>\
 		      <tr data-ng-repeat='notification in notifications' class='notification'><td width='20%'>{{notification.date.toLocaleString()}}</td><td width='70%'><div ng-bind-html='notification.html | unsafe'></div></td><td width='10%'><button class='confirmer' data-ng-if='notification.confirm' data-ng-click='publishPostN(notification.confirm, $index)'>Yes</button></td></tr>\
 		      <tr><td></td><td><button data-ng-click='clearNot()'>Clear all notifications</button> | <button data-ng-click='publishAll()'>Publish all</button></td></tr>\
-		    </table>\
+		    </table></div>\
 		    <table>\
 		      <tr data-ng-if='data.blogs.length > 0' style='font-weight: bold'><td></td><td>Blog name</td><td>Reply pool</td><td>Check interval</td><td>Ignore posts before</td><td>Mode</td></tr>\
 		      <tr data-ng-repeat='blog in data.blogs'>\
@@ -285,43 +286,52 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
 			$scope.checkPost = function (entry, blog) {
 				log.debug("Checking post", entry);
 				if (new Date(entry.published[0].__text) > new Date(blog.ignorebefore)) {
-					$.ajax({
-						url : entry.link[2]._href,
-						type : "GET",
-						contentType : "application/atom+xml",
-						async : true,
-						statusCode : {
-							200 : function (xml) {
-								log.debug("checkPost response comments list received", xml);
-								var json = $.xml2json.translate(xml);
-								var comments = json.feed.entry;
-								var iCommented = false;
-								if (comments) {
-									comments.forEach(function (comment) {
-										if (comment.author[0].email[0].__text.toLowerCase() == $scope.data.me)
-											iCommented = true;
-									});
-								}
-								if (!iCommented) {
-									log.info("No comment by " + $scope.data.me + " found in " + entry["_xml:base"]);
-									if (blog.mode == 1)
-										$scope.notifications.push({
-											blog : blog,
-											entry : entry,
-											date : new Date(Date.now()),
-											html : 'Post "<a href="' + entry["_xml:base"] + '" target="_BLANK">' + entry.title[0].__text + '</a>" found with no comment.'
-										});
-									if (blog.mode > 1) {
-										if (!$scope.posts[entry["_xml:base"]] || blog.mode == 3)
-											$scope.comment(entry, blog);
-									}
-								} else {
-									log.info(entry["_xml:base"] + " already contains a comment by " + $scope.data.me);
-								}
-								$scope.$digest();
-							}
-						}
-					});
+                    var replyurl = false;
+                    entry.link.forEach(function(link){
+                        if (link._rel == "replies")
+                            replyurl = link._href;
+                    });
+                    if (replyurl){
+                        $.ajax({
+                            url : replyurl,
+                            type : "GET",
+                            contentType : "application/atom+xml",
+                            async : true,
+                            statusCode : {
+                                200 : function (xml) {
+                                    log.debug("checkPost response comments list received", xml);
+                                    var json = $.xml2json.translate(xml);
+                                    log.debug("JSON", json);
+                                    var comments = json.feed?json.feed.entry:json.entry;
+                                    var iCommented = false;
+                                    if (comments) {
+                                        comments.forEach(function (comment) {
+                                            if (comment.author[0].email[0].__text.toLowerCase() == $scope.data.me)
+                                                iCommented = true;
+                                        });
+                                    }
+                                    if (!iCommented) {
+                                        log.info("No comment by " + $scope.data.me + " found in " + entry["_xml:base"]);
+                                        if (blog.mode == 1)
+                                            $scope.notifications.push({
+                                                blog : blog,
+                                                entry : entry,
+                                                date : new Date(Date.now()),
+                                                html : 'Post "<a href="' + entry["_xml:base"] + '" target="_BLANK">' + entry.title[0].__text + '</a>" found with no comment.'
+                                            });
+                                        if (blog.mode > 1) {
+                                            if (!$scope.posts[entry["_xml:base"]] || blog.mode == 3)
+                                                $scope.comment(entry, blog);
+                                        }
+                                    } else {
+                                        log.info(entry["_xml:base"] + " already contains a comment by " + $scope.data.me);
+                                    }
+                                    $scope.$digest();
+                                }
+                            }
+                        });
+                    } else
+                        log.error("This entry doesn't have any link to comments.");
 				} else
 					log.warn("This entry is older than the ignore before set for this blog", blog.ignorebefore);
 			};
