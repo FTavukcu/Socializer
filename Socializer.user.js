@@ -93,7 +93,7 @@ var $dashboard = $("\
 		      </dl></td></tr>\
 		    </table>\
 		    <table><tr><td><button class='reset settings' data-ng-click='reset()'>Reset settings</button></td><td><button class='save settings' data-ng-click='save()'>Save settings</button></td></tr>\
-		    <tr><td colspan='2'>Make sure to bookmark this page with [CTRL]+D/&#8984;+D - If you close this dashboard, Socializer will stop checking for updates and posting comments. If you want to give some feedback, please head over to the <a href='https://w3-connections.ibm.com/blogs/Socializer-Discussion/'>Socializer Discussion blog</a> and leave a comment.</td></tr><tr><td colspan='2'>Socializer v" + version + " - 2015 by <a href='mailto:fatih.tavukcu@de.ibm.com'>Fatih Tavukcu</a></td></tr></table>\
+		    <tr><td colspan='2'>Make sure to bookmark this page with [CTRL]+D/&#8984;+D - If you close this dashboard, Socializer will stop checking for updates and posting comments. If you want to give some feedback, please head over to the <a href='https://w3-connections.ibm.com/blogs/Socializer-Discussion/'>Socializer Discussion blog</a> and leave a comment.</td></tr><tr><td colspan='2'>Socializer v" + version + " - 2015 by <a href='mailto:fatih.tavukcu@de.ibm.com' target='_BLANK'>Fatih Tavukcu</a></td></tr></table>\
 		  </div>\
 		</div>\
 		<div id='loader'>Socializer is initializing, please wait...</div>\
