@@ -2,7 +2,7 @@
 // @name         Socializer
 // @namespace    https://github.com/FTavukcu/Socializer
 // @resource     materialicons https://fonts.googleapis.com/icon?family=Material+Icons
-// @version      1.0.1
+// @version      1.0.2
 // @description  Be more social - fully automated
 // @author       Fatih Tavukcu
 // @match        https://w3-connections.ibm.com/blogs/Socializer/*
@@ -16,7 +16,7 @@
 // @downloadURL  https://github.com/FTavukcu/Socializer/raw/master/Socializer.user.js
 // ==/UserScript==
 
-var version = '1.0.1';
+var version = '1.0.2';
 log.info('Socializer ' + version);
 
 GM_addStyle(GM_getResourceText("materialicons"));
@@ -340,7 +340,7 @@ angular.module('Socializer', []).controller('MainCtrl', ['$scope', '$http', '$in
 				log.debug("Commenting on entry ...", entry);
 				var content = entry.content[0].__text;
 				var scores = [];
-				var pool = $scope.data.pools[blog.pool];
+				var pool = $scope.data.pools[blog.pool - 1];
 				log.debug('Selected pool for', blog, 'is', post);
 				pool.matches.forEach(function (matcher) {
 					log.debug('Matching', content, 'with', matcher.regex);
